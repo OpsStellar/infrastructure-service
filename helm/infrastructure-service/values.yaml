@@ -1,0 +1,148 @@
+# Default values for infrastructure-service
+replicaCount: 2
+
+image:
+  repository: opsstellar/infrastructure-service
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8030"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8030
+  targetPort: 8030
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    {}
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: infrastructure.opsstellar.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: infrastructure-tls
+  #    hosts:
+  #      - infrastructure.opsstellar.io
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - infrastructure-service
+          topologyKey: kubernetes.io/hostname
+
+# Environment variables
+env:
+  DEBUG: "false"
+  LOG_LEVEL: "INFO"
+  CACHE_TTL: "300"
+  ENABLE_TERRAFORM: "true"
+  ENABLE_CLOUDFORMATION: "true"
+  ENABLE_ARM: "true"
+  ENABLE_GCP_DEPLOYMENT: "true"
+  DRIFT_CHECK_INTERVAL_HOURS: "24"
+  RESOURCE_SYNC_INTERVAL_MINUTES: "30"
+
+# External services
+database:
+  host: postgres
+  port: 5432
+  name: infrastructure_db
+  existingSecret: infrastructure-db-secret
+  secretKeys:
+    username: username
+    password: password
+
+redis:
+  host: redis
+  port: 6379
+  existingSecret: ""
+
+# Service dependencies
+authService:
+  url: http://auth-service:8001
+
+settingsService:
+  url: http://settings-service:8020
+
+costService:
+  url: http://cost-service:8010
+
+# OpenTelemetry
+otel:
+  enabled: true
+  endpoint: http://otel-collector:4317
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8030
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8030
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3

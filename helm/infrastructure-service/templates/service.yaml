@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "infrastructure-service.fullname" . }}
+  labels:
+    app: {{ include "infrastructure-service.name" . }}
+    component: infrastructure-service
+    part-of: opsstellar
+    managed-by: helm
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ include "infrastructure-service.name" . }}

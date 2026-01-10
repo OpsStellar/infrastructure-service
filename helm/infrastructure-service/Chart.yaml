@@ -1,0 +1,15 @@
+apiVersion: v2
+name: infrastructure-service
+description: Infrastructure & Cloud Management Service Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - infrastructure
+  - iac
+  - terraform
+  - cloudformation
+  - devops
+maintainers:
+  - name: Opsstellar Team
+    email: team@opsstellar.io
