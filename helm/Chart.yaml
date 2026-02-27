@@ -1,4 +1,4 @@
-# Infrastructure Service Helm Chart
+apiVersion: v2
 name: infrastructure-service
 description: OpsStellar Infrastructure Management Service
 version: 1.0.0

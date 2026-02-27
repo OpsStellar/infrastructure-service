@@ -33,19 +33,25 @@ env:
     value: "8030"
   - name: LOG_LEVEL
     value: "INFO"
-  - name: DEBUG
-    value: "false"
   - name: DATABASE_URL
-    value: "postgresql://postgres:postgres@postgres:5432/infrastructure_db"
+    value: "postgresql://opsstellar_user:opsstellar_password@postgres:5432/opsstellar"
   - name: REDIS_URL
     value: "redis://redis:6379"
-  - name: AUTH_SERVICE_URL
-    value: "http://auth-service:8001"
+  - name: CORS_ORIGINS
+    value: '["http://localhost:5174","http://localhost:5173","http://localhost:3000"]'
   - name: SETTINGS_SERVICE_URL
     value: "http://settings-service:8020"
-  - name: COST_SERVICE_URL
-    value: "http://cost-service:8010"
+  - name: AUTH_SERVICE_URL
+    value: "http://auth-service:8001"
+  - name: DRIFT_CHECK_INTERVAL
+    value: "3600"
+  - name: MAX_STATE_FILE_VERSIONS
+    value: "10"
+  - name: OTLP_ENDPOINT
+    value: "http://apm-service:8016/v1/traces"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
-    value: "http://otel-collector:4317"
+    value: "http://apm-service:8016"
+
+# Dependencies: postgres (healthy), db-service (completed), redis (healthy), settings-service (healthy)
 
 namespace: default
