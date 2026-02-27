@@ -15,8 +15,8 @@ on:
 env:
     SERVICE_NAME: infrastructure-service
     ACR_NAME: opsstellardevacr
-  ACR_USERNAME: opsstellardevacr
-  ACR_PASSWORD: 4Zlgo3foy2kbzzDhh8rrT3NGKFhbEeLbPQfMtdUKHy7h9cd6qgQIJQQJ99CBACYeBjFEqg7NAAACAZCR0vuG
+    ACR_USERNAME: opsstellardevacr
+    ACR_PASSWORD: 4Zlgo3foy2kbzzDhh8rrT3NGKFhbEeLbPQfMtdUKHy7h9cd6qgQIJQQJ99CBACYeBjFEqg7NAAACAZCR0vuG
 
 jobs:
     build-and-push:
