@@ -1,0 +1,48 @@
+name: Build & Push to ACR
+
+on:
+    # push:
+    #   branches:
+    #     - main
+    #     - develop
+    #     - feature/*
+    # pull_request:
+    #   branches:
+    #     - main
+    #     - develop
+    workflow_dispatch:
+
+env:
+    SERVICE_NAME: infrastructure-service
+    ACR_NAME: opsstellardevacr
+
+jobs:
+    build-and-push:
+        name: Build & Push to ACR
+        runs-on: ubuntu-latest
+        outputs:
+            image_tag: ${{ steps.sha.outputs.short }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Get short SHA
+              id: sha
+              run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+            - name: Login to Azure Container Registry
+              uses: azure/docker-login@v1
+              with:
+                  login-server: ${{ env.ACR_NAME }}.azurecr.io
+                  username: ${{ secrets.ACR_USERNAME }}
+                  password: ${{ secrets.ACR_PASSWORD }}
+
+            - name: Build and push Docker image
+              run: |
+                  SHORT_SHA=${{ steps.sha.outputs.short }}
+                  docker build \
+                    -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:${SHORT_SHA} \
+                    -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:latest .
+                  docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:${SHORT_SHA}
+                  docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:latest
+                  echo "Pushed image tag: ${SHORT_SHA}"

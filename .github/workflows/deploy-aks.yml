@@ -1,0 +1,115 @@
+name: Deploy to AKS
+
+on:
+    # Auto-triggered after a successful build pipeline run
+    workflow_run:
+        workflows: ["Build & Push to ACR"]
+        types:
+            - completed
+
+    # Manual trigger with explicit inputs
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: "Target environment"
+                required: true
+                type: choice
+                options:
+                    - dev
+                    - staging
+                    - production
+            image_tag:
+                description: "Short commit SHA from build workflow (e.g. a1b2c3d)"
+                required: true
+
+env:
+    SERVICE_NAME: infrastructure-service
+    ACR_NAME: opsstellardevacr
+    AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+    AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+
+jobs:
+    deploy:
+        name: Deploy to AKS
+        # When triggered by workflow_run, only proceed if the build succeeded
+        if: >
+            github.event_name == 'workflow_dispatch' ||
+            (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Resolve image tag and environment
+              id: resolve
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_run" ]; then
+                    # Get short SHA from the commit that triggered the build
+                    SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+                    ENVIRONMENT="dev"
+                  else
+                    # Use manually provided inputs
+                    SHORT_SHA="${{ github.event.inputs.image_tag }}"
+                    ENVIRONMENT="${{ github.event.inputs.environment }}"
+                  fi
+                  echo "image_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
+                  echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
+                  echo "Deploying image tag: ${SHORT_SHA} to environment: ${ENVIRONMENT}"
+
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Install Helm
+              run: |
+                  if ! command -v helm &> /dev/null; then
+                    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                  fi
+                  helm version
+
+            - name: Install kubectl
+              run: |
+                  if ! command -v kubectl &> /dev/null; then
+                    az aks install-cli
+                  fi
+                  kubectl version --client
+
+            - name: Get AKS credentials
+              run: |
+                  az aks get-credentials \
+                    --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                    --name ${{ env.AKS_CLUSTER_NAME }} \
+                    --overwrite-existing
+
+            - name: Create namespace if not exists
+              run: |
+                  kubectl create namespace ${{ steps.resolve.outputs.environment }} \
+                    --dry-run=client -o yaml | kubectl apply -f -
+
+            - name: Create ACR image pull secret
+              run: |
+                  kubectl create secret docker-registry acr-secret \
+                    --docker-server=${{ env.ACR_NAME }}.azurecr.io \
+                    --docker-username=${{ secrets.ACR_USERNAME }} \
+                    --docker-password=${{ secrets.ACR_PASSWORD }} \
+                    --namespace=${{ steps.resolve.outputs.environment }} \
+                    --dry-run=client -o yaml | kubectl apply -f -
+
+            - name: Deploy with Helm
+              run: |
+                  IMAGE_TAG="${{ steps.resolve.outputs.image_tag }}"
+                  ENVIRONMENT="${{ steps.resolve.outputs.environment }}"
+
+                  helm upgrade ${{ env.SERVICE_NAME }} ./helm \
+                    --install \
+                    --create-namespace \
+                    --namespace $ENVIRONMENT \
+                    --set image.tag=$IMAGE_TAG \
+                    --set image.repository=${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }} \
+                    --set namespace=$ENVIRONMENT \
+                    --values ./helm/values.yaml \
+                    --wait \
+                    --timeout 5m \
+                    --atomic \
+                    --cleanup-on-fail

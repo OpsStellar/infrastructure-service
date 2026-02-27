@@ -1,0 +1,51 @@
+# Helm values for infrastructure-service
+
+replicaCount: 1
+
+image:
+  repository: opsstellardevacr.azurecr.io/infrastructure-service
+  pullPolicy: Always
+  tag: "latest"
+
+imagePullSecrets:
+  - name: acr-secret
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8030
+  targetPort: 8030
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+env:
+  - name: SERVICE_NAME
+    value: "infrastructure-service"
+  - name: SERVICE_PORT
+    value: "8030"
+  - name: LOG_LEVEL
+    value: "INFO"
+  - name: DEBUG
+    value: "false"
+  - name: DATABASE_URL
+    value: "postgresql://postgres:postgres@postgres:5432/infrastructure_db"
+  - name: REDIS_URL
+    value: "redis://redis:6379"
+  - name: AUTH_SERVICE_URL
+    value: "http://auth-service:8001"
+  - name: SETTINGS_SERVICE_URL
+    value: "http://settings-service:8020"
+  - name: COST_SERVICE_URL
+    value: "http://cost-service:8010"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector:4317"
+
+namespace: default
