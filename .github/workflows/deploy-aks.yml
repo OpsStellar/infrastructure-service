@@ -112,7 +112,7 @@ jobs:
                     --set image.repository=${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }} \
                     --set namespace=$ENVIRONMENT \
                     --values ./helm/values.yaml \
-                    --wait \
-                    --timeout 5m \
-                    --atomic \
-                    --cleanup-on-fail
+                    # --wait \
+                    # --timeout 5m \
+                    # --atomic \
+                    # --cleanup-on-fail
