@@ -42,9 +42,8 @@ jobs:
             - name: Build and push Docker image
               run: |
                   SHORT_SHA=${{ steps.sha.outputs.short }}
-                  docker build \
-                    # -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:${SHORT_SHA} \
-                    -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:latest .
+                  # docker build -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:${SHORT_SHA} -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:latest .
+                  docker build -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:latest .
                   # docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:${SHORT_SHA}
                   docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.SERVICE_NAME }}:latest
                   echo "Pushed image tag: latest"
