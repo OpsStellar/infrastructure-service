@@ -19,8 +19,9 @@ on:
                     - staging
                     - production
             image_tag:
-                description: "Short commit SHA from build workflow (e.g. a1b2c3d)"
-                required: true
+                description: "Image tag to deploy (default: latest)"
+                required: false
+                default: "latest"
 
 env:
     SERVICE_NAME: infrastructure-service
@@ -47,17 +48,18 @@ jobs:
               id: resolve
               run: |
                   if [ "${{ github.event_name }}" = "workflow_run" ]; then
-                    # Get short SHA from the commit that triggered the build
-                    SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+                    # Always deploy latest tag
+                    # SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
                     ENVIRONMENT="dev"
                   else
                     # Use manually provided inputs
-                    SHORT_SHA="${{ github.event.inputs.image_tag }}"
+                    # SHORT_SHA="${{ github.event.inputs.image_tag }}"
                     ENVIRONMENT="${{ github.event.inputs.environment }}"
                   fi
-                  echo "image_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
+                  IMAGE_TAG="latest"
+                  echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
                   echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
-                  echo "Deploying image tag: ${SHORT_SHA} to environment: ${ENVIRONMENT}"
+                  echo "Deploying image tag: ${IMAGE_TAG} to environment: ${ENVIRONMENT}"
 
             - name: Azure Login
               uses: azure/login@v1
