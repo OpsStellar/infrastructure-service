@@ -19,9 +19,8 @@ on:
           - staging
           - production
       image_tag:
-        description: "Image tag to deploy (default: latest)"
+        description: "Image tag to deploy (short commit SHA, e.g. a1b2c3d4)"
         required: false
-        default: "latest"
 
 env:
   SERVICE_NAME: infrastructure-service
@@ -48,15 +47,15 @@ jobs:
         id: resolve
         run: |
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            # Always deploy latest tag
-            # SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+            SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-8)
+            IMAGE_TAG="${SHORT_SHA}"
             ENVIRONMENT="dev"
           else
-            # Use manually provided inputs
-            # SHORT_SHA="${{ github.event.inputs.image_tag }}"
+            # Use provided tag, or fall back to current HEAD short SHA
+            INPUT_TAG="${{ github.event.inputs.image_tag }}"
+            IMAGE_TAG="${INPUT_TAG:-$(echo ${{ github.sha }} | cut -c1-8)}"
             ENVIRONMENT="${{ github.event.inputs.environment }}"
           fi
-          IMAGE_TAG="latest"
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
           echo "Deploying image tag: ${IMAGE_TAG} to environment: ${ENVIRONMENT}"
