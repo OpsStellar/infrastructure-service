@@ -20,11 +20,11 @@ service:
 
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 100m
+    memory: 64Mi
   requests:
-    cpu: 250m
-    memory: 256Mi
+    cpu: 100m
+    memory: 64Mi
 
 env:
   - name: SERVICE_NAME
