@@ -20,11 +20,11 @@ service:
 
 resources:
   limits:
-    cpu: 100m
-    memory: 64Mi
+    cpu: 200m
+    memory: 256Mi
   requests:
     cpu: 100m
-    memory: 64Mi
+    memory: 128Mi
 
 env:
   - name: SERVICE_NAME
@@ -34,9 +34,9 @@ env:
   - name: LOG_LEVEL
     value: "INFO"
   - name: DATABASE_URL
-    value: "postgresql://opsstellar_user:opsstellar_password@postgres:5432/opsstellar"
+    value: "postgresql://opsstellar_user:opsstellar_password@postgres.postgres-dev.svc.cluster.local:5432/opsstellar"
   - name: REDIS_URL
-    value: "redis://redis:6379"
+    value: "redis://redis-master.redis-dev.svc.cluster.local:6379"
   - name: CORS_ORIGINS
     value: '["http://localhost:5174","http://localhost:5173","http://localhost:3000"]'
   - name: SETTINGS_SERVICE_URL
@@ -54,4 +54,4 @@ env:
 
 # Dependencies: postgres (healthy), db-service (completed), redis (healthy), settings-service (healthy)
 
-namespace: default
+namespace: dev
