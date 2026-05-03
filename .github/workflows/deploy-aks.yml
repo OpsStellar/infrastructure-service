@@ -3,7 +3,7 @@ name: Deploy to AKS
 on:
   # Auto-triggered after a successful build pipeline run
   workflow_run:
-    workflows: ["Build & Push to ACR"]
+    workflows: [ "Build & Push to ACR" ]
     types:
       - completed
 
@@ -24,20 +24,23 @@ on:
 
 env:
   SERVICE_NAME: infrastructure-service
-  ACR_NAME: opsstellardevacr
+  ACR_NAME: devacr
   ACR_USERNAME: opsstellardevacr
-  ACR_PASSWORD: 4Zlgo3foy2kbzzDhh8rrT3NGKFhbEeLbPQfMtdUKHy7h9cd6qgQIJQQJ99CBACYeBjFEqg7NAAACAZCR0vuG
+  ACR_PASSWORD: test123456987
   AZURE_RESOURCE_GROUP: opsstellar-dev-rg
   AKS_CLUSTER_NAME: opsstellar-dev-aks
-  AZURE_CREDENTIALS: '{"clientId":"2f54ef99-beb9-4473-b696-6639d40dd76e","clientSecret":"ED28Q~wUkWhV76OdHKFFNrwPOsqJJBkmneb8LaF4","subscriptionId":"459e1e2d-bfc3-4a33-b475-5c1923557262","tenantId":"185ef526-b6f9-4cd5-b6a3-4fa6039f3ae0"}'
+  AZURE_CREDENTIALS: "{\"clientId\":\"test-beb9-4473-b696-6639d40dd76e\",\"client\
+    Secret\":\"testsdfsadf322~wUkWhV76OdHKFFNrwPOsqJJBkmneb8LaF4\",\"subscripti\
+    onId\":\"test-bfc3-3423-b475-5c1923557262\",\"tenantId\":\"test-185e234-b6f\
+    9-4cd5-b6a3-4fa6039f3ae0\"}"
 
 jobs:
   deploy:
     name: Deploy to AKS
     # When triggered by workflow_run, only proceed if the build succeeded
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      github.event_name == 'workflow_dispatch' || (github.event_name ==
+      'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
